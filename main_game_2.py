@@ -5,6 +5,7 @@ import datetime
 
 # TODO option to choose class - buttons?
 # TODO drowning survivors - change to asynchronized code
+# TODO argparse
 
 # starting positions
 start_position_x = 280
@@ -156,20 +157,16 @@ class Survivor:
     The goal of the game is to save as many as possible
     """
 
-    def __init__(self, pos_x, pos_y, number):
-        """
-        :param pos_x: The x position of the group
-        :param pos_y: The y position of the group
-        :param number: The number of people in the group
-        """
-        self._x = pos_x  # position on screen
-        self._y = pos_y  # position on screen
+    def __init__(self):
+
+        self._x = random.randint(0, width // 2)  # position on screen
+        self._y = random.randint(0, height // 2)  # position on screen
 
         self._image = pygame.image.load('survivor.png')
         self._image = pygame.transform.scale(self._image, (70, 35))
         self._rect = pygame.Rect(self._y, self._x, 120, 60)
 
-        self._value = number  # number of survivors at spot
+        self._value = random.randint(1, 10)  # number of survivors at spot
         lives = comic_sans.render(str(self._value), True, (255, 255, 255))
         self._image.blit(lives, (0, 0))
 
@@ -319,32 +316,19 @@ def spawn_survivors(user):
     """"
     The function to spawn survivors
     """
-    pos_x = random.randint(0, width // 2)
-    pos_y = random.randint(0, height // 2)
-    value = random.randint(1, 10)
-    new_survivor = Survivor(pos_x, pos_y, value)
-    # for s in user.survivors_left:
-    #     while new_survivor._rect.colliderect(s._rect):
-    #         pos_x = random.randint(0, width // 2)
-    #         pos_y = random.randint(0, height // 2)
-    #         new_survivor = Survivor(pos_x, pos_y, value, user)
-    user.survivors_left.add(new_survivor)
+    user.survivors_left.add(Survivor())
 
 
 def reduce_time(player):
     """
     Makes sure the groups of survivors will drown after a certain period if not rescued
     """
-    for s in player.survivors_left:
+    for s in player.survivors_left.copy():
         s._time -= 1
         if s._time <= 0:
-            if player._score < s._value:
-                player._score = 0
-            else:
-                player._score -= s._value
+            player._score = max(0, player._score - s._value)
             player.survivors_left.remove(s)
-            del s
-            break
+
 
 def get_valid_int(text):
     """
