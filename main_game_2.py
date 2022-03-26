@@ -16,65 +16,67 @@ width, height = 1000, 600
 class Ship:
     """
     The class for the player - superclass of all ships available in the game
+
+    speed: The number of pixel the ship moves every second
+    max_capacity: The number of people the ship can hold before it must return to dock
+    width_ship: The width of the ship when facing up
+    length_ship: The length of the ship when facing up
+    hits: Number of collisions with fire/sharks before game over
+    obstacle_to_spawn: Number of obstacles to spawn after each unload
+    name: The type of ship
     """
+    speed = None
+    max_capacity = None
+    (ship_width, ship_length) = None, None
+    hits = None
+    obstacles_to_spawn = None
+    name = None
 
-    def __init__(self, _image_name, _velocity, _capacity, _player_width, _player_height, health, obs):
-        """
+    @property
+    def image_name(self):
+        return f'{self.name.replace(" ", "_")}.png'
 
-        :param _image_name: The image which will be displayed
-        :param _velocity: The number of pixel the ship moves every second
-        :param _capacity: The number of people the ship can hold before it must return to dock
-        :param _player_width: The width of the ship when facing up
-        :param _player_height: The length of the ship when facing up
-        :param health: Number of collisions with fire/sharks before game over
-        :param obs: Number of obstacles to spawn after each unload
-        """
-        self._avatar = pygame.image.load(_image_name)  # the image of the ship
-        self._speed = _velocity
-        self._max_capacity = _capacity
+    def __init__(self):
+        self._avatar = pygame.image.load(self.image_name)  # the image of the ship
         self._current_capacity = 0
-        self.short_side = _player_width
-        self.long_side = _player_height
-        self._avatar = pygame.transform.scale(self._avatar, (_player_width, _player_height))
-        self._player = pygame.Rect(start_position_x, start_position_y, _player_width, _player_height)
+        self._avatar = pygame.transform.scale(self._avatar, (self.ship_width, self.ship_length))
+        self._player = pygame.Rect(start_position_x, start_position_y, self.ship_width, self.ship_length)
         self.survivors_left = set()  # a set of all survivors on screen
-        self._dangers = set()
+        self._dangers = set()  # a set of all obstacles on screen
         self._score = 0
         self._rotation = 0
-        self.health = health
-        self.obs = obs
 
     def movement(self, keys):
         """
         In charge of responding to the player moving, using the arrow keys
         :param keys: pygame.keys.get_pressed() - a list of all keys currently held down
         """
-        if keys[pygame.K_UP] and self._player.y - self._speed > 0:
+        if keys[pygame.K_UP] and self._player.y - self.speed > 0:
             self._avatar = pygame.transform.rotate(self._avatar, 0 - self._rotation)
-            self._player = pygame.Rect(self._player.x, self._player.y, self.short_side, self.long_side)
+            self._player = pygame.Rect(self._player.x, self._player.y, self.ship_width, self.ship_length)
             self._rotation = 0
-            self._player.y -= self._speed
-        if keys[pygame.K_DOWN] and self._player.y + self._speed + self._player.height < height:
-            if self._player.x > width - 200 and self._player.y + self._speed + self._player.height > height - 300:
+            self._player.y -= self.speed
+        if keys[pygame.K_DOWN] and self._player.y + self.speed + self._player.height < height:
+            if self._player.x > width - 200 and self._player.y + self.speed + self._player.height > height - 300:
                 pass
             else:
                 self._avatar = pygame.transform.rotate(self._avatar, 180 - self._rotation)
-                self._player = pygame.Rect(self._player.x, self._player.y, self.short_side, self.long_side)
+                self._player = pygame.Rect(self._player.x, self._player.y, self.ship_width, self.ship_length)
                 self._rotation = 180
-                self._player.y += self._speed
-        if keys[pygame.K_LEFT] and self._player.x - self._speed > 0:
+                self._player.y += self.speed
+        if keys[pygame.K_LEFT] and self._player.x - self.speed > 0:
             self._avatar = pygame.transform.rotate(self._avatar, 90 - self._rotation)
-            self._player = pygame.Rect(self._player.x, self._player.y, self.long_side, self.short_side)
+            self._player = pygame.Rect(self._player.x, self._player.y, self.ship_length, self.ship_width)
             self._rotation = 90
-            self._player.x -= self._speed
-        if keys[pygame.K_RIGHT] and self._player.x + self._player.width + self._speed < width:
-            if self._player.y > height - 475 and self._player.x + self._speed + self._player.width > width - 125:
+            self._player.x -= self.speed
+        if keys[pygame.K_RIGHT] and self._player.x + self._player.width + self.speed < width:
+            if self._player.y > height - 475 and self._player.x + self.speed + self._player.width > width - 125:
                 pass
             else:
                 self._avatar = pygame.transform.rotate(self._avatar, 270 - self._rotation)
-                self._player = pygame.Rect(self._player.x, self._player.y, self.long_side, self.short_side)
+                self._player = pygame.Rect(self._player.x, self._player.y, self.ship_length, self.ship_width)
                 self._rotation = 270
-                self._player.x += self._speed
+                self._player.x += self.speed
         pygame.display.update()
 
     def rescue(self, wreck):
@@ -82,7 +84,7 @@ class Ship:
         To rescue a group of survivors
         :param wreck: the group of survivors to rescue
         """
-        if self._current_capacity + wreck._value <= self._max_capacity:
+        if self._current_capacity + wreck._value <= self.max_capacity:
             self._current_capacity += wreck._value
             wreck.rescued(self)
             num = random.randint(1, 3)
@@ -90,8 +92,8 @@ class Ship:
                 spawn_survivors(self)
                 spawn_survivors(self)
 
-        elif self._current_capacity < self._max_capacity:
-            saved = self._max_capacity - self._current_capacity
+        elif self._current_capacity < self.max_capacity:
+            saved = self.max_capacity - self._current_capacity
             self._current_capacity += saved
             wreck.part_saved(saved)
 
@@ -102,7 +104,7 @@ class Ship:
         self._score += self._current_capacity
         self._current_capacity = 0
 
-        for i in range(self.obs):
+        for i in range(self.obstacles_to_spawn):
             new_danger = Obstacle()
             self._dangers.add(new_danger)
 
@@ -114,56 +116,38 @@ class Ship:
             spawn_survivors(self)
             spawn_survivors(self)
 
+    def __str__(self):
+        return self.name.title()
+
 
 class Small_Ship(Ship):
-    """
-    The smallest ship available
-    Speed = 9
-    Capacity = 20
-    Width, Length (when facing up) = 25, 75
-    Number of hits it can take = 3
-    number of obstacles to spawn after each unload = 3
-    """
-
-    def __init__(self):
-        super().__init__('small_ship.png', 9, 20, 25, 75, 30, 2)
-
-    def __str__(self):
-        return 'Small Ship'
+    name = "small ship"
+    speed = 9
+    max_capacity = 20
+    (ship_width, ship_length) = 25, 75
+    hits = 30
+    obstacles_to_spawn = 2
 
 
 class Medium_Ship(Ship):
-    """
-    The middle ship
-    Speed = 5
-    Capacity = 50
-    Width, Length (when facing up) = 35, 105
-    Number of hits it can take = 4
-    Number of obstacles to spawn after each unload = 4
-    """
-
-    def __init__(self):
-        super().__init__('medium_ship.png', 5, 50, 35, 105, 40, 3)
-
-    def __str__(self):
-        return "Medium Ship"
+    name = "medium ship"
+    speed = 5
+    max_capacity = 50
+    (ship_width, ship_length) = 35, 105
+    hits = 40
+    obstacles_to_spawn = 4
 
 
 class Large_Ship(Ship):
     """
     The largest ship available
-    Speed = 3
-    Capacity = 100
-    Width, Length (when facing up) = 45, 135
-    Number of hits it can take = 5
-    Number of obstacles to spawn after each unload = 5
     """
-
-    def __init__(self):
-        super().__init__('large_ship.png', 3, 100, 45, 135, 50, 5)
-
-    def __str__(self):
-        return "Large Ship"
+    name = "large ship"
+    speed = 3
+    max_capacity = 100
+    (ship_width, ship_length) = 45, 135
+    hits = 50
+    obstacles_to_spawn = 5
 
 
 class Survivor:
@@ -266,11 +250,11 @@ def main(player):
 
         for d in player._dangers:
             if player._player.colliderect(d.rect):
-                player.health -= 10
+                player.hits -= 10
                 player._dangers.remove(d)
                 break
 
-        if player.health <= 0:
+        if player.hits <= 0:
             draw_window(player)
             pygame.time.wait(1000)
             game_over(player)
@@ -295,14 +279,14 @@ def draw_window(player):
 
     # top right texts
     capacity_score = comic_sans.render("Current capacity: {}".format(player._current_capacity), True, (255, 255, 255))
-    max_capacity_show = comic_sans.render("Max Capacity: {}".format(player._max_capacity), True, (255, 255, 255))
+    max_capacity_show = comic_sans.render("Max Capacity: {}".format(player.max_capacity), True, (255, 255, 255))
     MAIN_WINDOW.blit(capacity_score, (width - capacity_score.get_width() - 10, 0))
     MAIN_WINDOW.blit(max_capacity_show, (width - capacity_score.get_width() - 10, capacity_score.get_height()))
 
     # bottom left texts
     score_text = comic_sans.render("Score: {}".format(player._score), True, (255, 255, 255))
     MAIN_WINDOW.blit(score_text, (10, height - score_text.get_height() - 10))
-    health_text = comic_sans.render(f"Health: {player.health}", True, (255, 255, 255))
+    health_text = comic_sans.render(f"Health: {player.hits}", True, (255, 255, 255))
     MAIN_WINDOW.blit(health_text, (10, height - score_text.get_height() - health_text.get_height() - 10))
 
     # the dock
