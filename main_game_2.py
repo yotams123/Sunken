@@ -2,9 +2,9 @@ import pygame
 import random
 import sqlite3
 import datetime
+import argparse
 
 # TODO option to choose class - buttons?
-# TODO drowning survivors - change to asynchronized code
 # TODO argparse
 
 # starting positions
@@ -158,7 +158,6 @@ class Survivor:
     """
 
     def __init__(self):
-
         self._x = random.randint(0, width // 2)  # position on screen
         self._y = random.randint(0, height // 2)  # position on screen
 
@@ -330,30 +329,24 @@ def reduce_time(player):
             player.survivors_left.remove(s)
 
 
-def get_valid_int(text):
-    """
-    Recursive. Asks for input from the user until the input can successfully be converted to an int
-    :param text: The prompt for the input
-    :return: the number entered by the user
-    """
+def valid_int(x):
     try:
-        num = int(input(text))
+        num = int(x)
     except ValueError:
-        num = get_valid_int("Please enter a number"
-                            "> ")
+        raise argparse.ArgumentTypeError(f"Expected integer, got {s!r}")
 
+    if num > 3 or num < 1:
+        raise argparse.ArgumentTypeError(f"Expected num between 1 and 3, got {num}")
     return num
 
 
 if __name__ == '__main__':
-    choice = get_valid_int("Choose a class of ship:\n"
-                           "Small Ship (Health 20, Capacity 20, Speed 9) - 1\n"
-                           "Medium Ship (Health 30, Capacity 50, Speed 5) - 2\n"
-                           "Large Ship (Health 50, Capacity 100, Speed 3) - 3\n"
-                           "> ")
-    while choice < 1 or choice > 3:
-        choice = get_valid_int("Please enter a number between 1 and 3"
-                               "> ")
+    parser = argparse.ArgumentParser(description="Ship type")
+    parser.add_argument("Type", type=valid_int, help="Size of ship. Enter num between 1 and 3 to refer to "
+                                                     "small, medium or large ship")
+    args = parser.parse_args()
+
+    choice = args.Type
     if choice == 1:
         player = Small_Ship()
     elif choice == 2:
@@ -378,7 +371,7 @@ if __name__ == '__main__':
 
     # collecting data to save into database
     game_date = datetime.datetime.now()
-    game_date = game_date.strftime('%d/%b/%Y, %H:%M:%S')
+    game_date = game_date.strftime('%Y/%b/%d, %H:%M:%S')
     final_score = player._score
     ship_type = player.__str__()
 
