@@ -35,7 +35,7 @@ class Ship:
 
     @property
     def image_name(self):
-        return f'{self.name.replace(" ", "_")}.png'
+        return f'images/{self.name.replace(" ", "_")}.png'
 
     def __init__(self):
         self._avatar = pygame.image.load(self.image_name)  # the image of the ship
@@ -161,7 +161,7 @@ class Survivor:
         self._x = random.randint(0, width // 2)  # position on screen
         self._y = random.randint(0, height // 2)  # position on screen
 
-        self._image = pygame.image.load('survivor.png')
+        self._image = pygame.image.load('images/survivor.png')
         self._image = pygame.transform.scale(self._image, (70, 35))
         self._rect = pygame.Rect(self._y, self._x, 120, 60)
 
@@ -185,7 +185,7 @@ class Survivor:
         :param number: the number of people saved
         """
         self._image.fill((50, 100, 250))
-        self._image = pygame.image.load('survivor.png')
+        self._image = pygame.image.load('images/survivor.png')
         self._image = pygame.transform.scale(self._image, (70, 35))
         self._value -= number
         lives = comic_sans.render(str(self._value), True, (255, 255, 255))
@@ -207,9 +207,9 @@ class Obstacle:
         """
         num = random.randint(1, 2)
         if num == 1:
-            image = pygame.image.load('fire.png')
+            image = pygame.image.load('images/fire.png')
         else:
-            image = pygame.image.load('shark.png')
+            image = pygame.image.load('images/shark.png')
         self._avatar = image
         self._avatar = pygame.transform.scale(self._avatar, (50, 50))
         self.pos_x = random.randint(1, width)
@@ -362,7 +362,7 @@ if __name__ == '__main__':
     comic_sans = pygame.font.SysFont('comicsans', 20)
 
     # setting the dock
-    dock_image = pygame.image.load("dock.png")
+    dock_image = pygame.image.load("images/dock.png")
     dock_image = pygame.transform.scale(dock_image, (150, 350))
     dock_rect = pygame.Rect(width - 150, height - 350, 150, 350)
 
